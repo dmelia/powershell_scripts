@@ -14,8 +14,7 @@ All Code provided as is and used at your own risk.
 # Fonction explorateur de fichiers #
 ####################################
 
-function Explorer
-{
+function Explorer {
     param(
         [Parameter(ValueFromPipeline = $true, HelpMessage = "Enter le chemin du fichier CSV)")]
         [String[]]$Path = $null
@@ -41,7 +40,7 @@ function Explorer
             }
         } else {
             # Shows upon cancellation of Save Menu
-            Write-Host -ForegroundColor Yellow "Notice: Aucun fichier sélectionné"
+            Write-Host -ForegroundColor Yellow "Notice: Aucun fichier sÃ©lectionnÃ©"
             Break
         }
     }
@@ -59,10 +58,10 @@ function Install_AD {
     Write-Host "`n===== Installation d'un active directory =====`n" -BackgroundColor DarkGray
 
 
-    # Demande du Nom de Server à l'Administrateur pour le renommage de la machine
+    # Demande du Nom de Server Ã  l'Administrateur pour le renommage de la machine
     $SRV_name = Read-Host "Renseigner le nom du server"
 
-    # Remplace le nom générique du serveur par le nom choisi et redémarrage du serveur
+    # Remplace le nom gÃ©nÃ©rique du serveur par le nom choisi et redÃ©marrage du serveur
     workflow Resume_Workflow
     {
 
@@ -71,14 +70,14 @@ function Install_AD {
         # Do some stuff
     }
 
-    # Tâches effectués après le redémarrage du server:
-    # - Adressage IP / Nom de la nouvelle Forêt / installation du DNS et paramétrage de son IP.
+    # TÃ¢ches effectuÃ©s aprÃ¨s le redÃ©marrage du server:
+    # - Adressage IP / Nom de la nouvelle ForÃªt / installation du DNS et paramÃ©trage de son IP.
 
     Param(
     [Parameter(Mandatory = $false, ValueFromPipeline = $true)][string[]]$IPv4 = Read-Host "Renseigner l'adresse IPv4 du serveur : ",
-    [Parameter(Mandatory = $false, ValueFromPipeline = $true)][string[]]$Mask = Read-Host "Renseigner le masque de sous réseau exemple seulement 24 for /24 : ",
+    [Parameter(Mandatory = $false, ValueFromPipeline = $true)][string[]]$Mask = Read-Host "Renseigner le masque de sous rÃ©seau exemple seulement 24 for /24 : ",
     [Parameter(Mandatory =$false, ValueFromPipeline = $true)][string[]]$Gateway = Read-Host "Renseigner la passerelle : ", # gateway
-    [Parameter(Mandatory = $false, ValueFromPipeline = $true)][string[]]$IP_dns = Read-Host "Renseigner le DNS (normalement si c'est un AD c'est lui même) : ", # dns @ip
+    [Parameter(Mandatory = $false, ValueFromPipeline = $true)][string[]]$IP_dns = Read-Host "Renseigner le DNS (normalement si c'est un AD c'est lui mÃªme) : ", # dns @ip
     [Parameter(Mandatory = $false, ValueFromPipeline= $true)][string[]]$name_domain = Read-Host "Renseigner le nom de domaine voulu exemple.com" # name of DC
     )
 
@@ -92,10 +91,10 @@ function Install_AD {
     # Permet de voir l'adressage
     Get-NetIPAddress
 
-    # Installe les service necessaire à la création d'un Active directory
-    Install-WindowsFeature –Name AD-Domain-Services –IncludeManagementTools
+    # Installe les service necessaire Ã  la crÃ©ation d'un Active directory
+    Install-WindowsFeature â€“Name AD-Domain-Services â€“IncludeManagementTools
 
-    # Paramétrage des différentes informations de l'Active directory
+    # ParamÃ©trage des diffÃ©rentes informations de l'Active directory
     # https://docs.microsoft.com/en-us/powershell/module/addsdeployment/install-addsforest?view=win10-ps
 
     Install-ADDSForest
@@ -111,13 +110,13 @@ function Install_AD {
     -SysvolPath "C:\Windows\SYSVOL"
     -Force:$true
 
-    # Paramétrage du DnsClientServerAddress
+    # ParamÃ©trage du DnsClientServerAddress
 
     # Check du DNS dans sa config initiale
     Get-DnsServerZone
 
-    # Ajout de la zone de recherche inversé
-    $IPreverse = Read-Host "Entrée l'adresse du réseau"
+    # Ajout de la zone de recherche inversÃ©
+    $IPreverse = Read-Host "EntrÃ©e l'adresse du rÃ©seau"
     Add-DnsServerPrimaryZone -Network ("$IPreverse") -ReplicationScope "Domain"
 
     # Check des modifications du Dns
@@ -137,7 +136,7 @@ function Install_AD {
 # Installation DHCP #
 #####################
 
-Write-Host " Installation du Role DHCP et prés paramétrage "
+Write-Host " Installation du Role DHCP et prÃ©s paramÃ©trage "
 [string]$Address = Read-Host -Prompt "Renseigner l'adresse IP du serveur : "
 Install-WindowsFeature -Name DHCP -IncludeManagementTools
 Add-DhcpServerInDC -DnsName 127.0.0.1 -IPAddress $Address
@@ -153,13 +152,13 @@ Add-DhcpServerInDC -DnsName 127.0.0.1 -IPAddress $Address
 
 function Create_OU_manual
 {
-    # Efface tout ce qu'il y a dans la console. Ainsi que les erreurs des précédante commandes ou scripts.
+    # Efface tout ce qu'il y a dans la console. Ainsi que les erreurs des prÃ©cÃ©dante commandes ou scripts.
     Clear-Host
 
     # Module
     Import-Module ActiveDirectory
 
-    Write-Host "`n===== Création de d''unité organisationnelle =====`n" -BackgroundColor DarkGray
+    Write-Host "`n===== CrÃ©ation de d''unitÃ© organisationnelle =====`n" -BackgroundColor DarkGray
     Write-Host ""
     Write-Host ""
     $DomainName = (Get-WmiObject Win32_ComputerSystem).Domain
@@ -170,53 +169,53 @@ function Create_OU_manual
 
     # Question
     $Path_DC = Read-Host -Prompt 'DC=exemple,DC=com'
-    $createOUName = Read-Host -Prompt 'Nommer la nouvelle unité organisationnelle (OU) :'
+    $createOUName = Read-Host -Prompt 'Nommer la nouvelle unitÃ© organisationnelle (OU) :'
 
 
     Try {
         Get-ADOrganizationalUnit -Identity ('OU=' + $createOUName + ',' + $Path_DC)
         $isCreated = $true
-        Write-host "L''unité organisationnelle $createOUName existe déjà" -ForegroundColor Red
+        Write-host "L''unitÃ© organisationnelle $createOUName existe dÃ©jÃ " -ForegroundColor Red
     }
     Catch {
         $isCreated = $false
-        Write-host  "L''unité organisationnelle $createOUName n''existe pas et va donc être créé" -ForegroundColor Yellow
+        Write-host  "L''unitÃ© organisationnelle $createOUName n''existe pas et va donc Ãªtre crÃ©Ã©" -ForegroundColor Yellow
     }
     If ($isCreated -eq $false) {
         New-ADOrganizationalUnit -Name $createOUName -Path $Path_DC -ProtectedFromAccidentalDeletion $False #Protection suppressive OU disable
-        Write-host  "Création de l''unité organisationnelle $createOUName terminé" -ForegroundColor Green
+        Write-host  "CrÃ©ation de l''unitÃ© organisationnelle $createOUName terminÃ©" -ForegroundColor Green
     }
 
-    # Choix à l'utilisateur de continuer ou non l'execution de la fonction afin de créer des sous OU
-    Write-Host "Souhaitez-vous créer des sous unités organisationnelle ?"-ForegroundColor Yellow
+    # Choix Ã  l'utilisateur de continuer ou non l'execution de la fonction afin de crÃ©er des sous OU
+    Write-Host "Souhaitez-vous crÃ©er des sous unitÃ©s organisationnelle ?"-ForegroundColor Yellow
     $annuler = ![bool]$reponse
     $reponse = read-host "Presser la touche [a] pour annuler, ou n'importe qu'elle touche pour continuer." -ForegroundColor Cyan
     $annuler = $response -eq "a"
 
-    # Ajout pour création de sous OU
+    # Ajout pour crÃ©ation de sous OU
 
-    $createSubOUName = Read-Host 'Entrer le ou les noms des nouvelles unité organisationnelle a créer. `\ntel que OU=Utilisateurs,OU=Comptabilite,OU=Chef,'
-    $ouName = Read-Host 'Entre le nom de l''unité organisationnelle racine dans laquelles ' $createSubOUName 'sera ou seront placés ?'
+    $createSubOUName = Read-Host 'Entrer le ou les noms des nouvelles unitÃ© organisationnelle a crÃ©er. `\ntel que OU=Utilisateurs,OU=Comptabilite,OU=Chef,'
+    $ouName = Read-Host 'Entre le nom de l''unitÃ© organisationnelle racine dans laquelles ' $createSubOUName 'sera ou seront placÃ©s ?'
     $FullPath = ('OU=' + $ouName + ',' + $Path_DC)
 
     Write-Host $FullPath
 
-    # Je renseigne le chemin complet de mes OU, je dis ou je veux que celle-ci soit placé (dans qu'elle OU), ensuite je fait 'OU custom' -Path (OU de base + FQDN) 
+    # Je renseigne le chemin complet de mes OU, je dis ou je veux que celle-ci soit placÃ© (dans qu'elle OU), ensuite je fait 'OU custom' -Path (OU de base + FQDN) 
 
     If (Get-ADOrganizationalUnit -Filter { Name -like $ouName }) {
         $isCreated = $true
-        Write-Host "L''existance de l''unité organisationnelle $ouName a été vérifié et validé et nous pouvons donc continuer" -ForegroundColor Green
+        Write-Host "L''existance de l''unitÃ© organisationnelle $ouName a Ã©tÃ© vÃ©rifiÃ© et validÃ© et nous pouvons donc continuer" -ForegroundColor Green
     } Try {
         Get-ADOrganizationalUnit -Identity ($createSubOUName + 'OU=' + $ouName + ',' + $Path_DC)
         $isCreated = $true
-        Write-Host "La ou les unité(s) organisationnelle(s) $createSubOUName existe(s) déjà" -ForegroundColor Red
+        Write-Host "La ou les unitÃ©(s) organisationnelle(s) $createSubOUName existe(s) dÃ©jÃ " -ForegroundColor Red
     }  Catch {
         $isCreated = $false
-        Write-Host "La ou les unité(s) organisationnelle(s) $createSubOUName n''existe(s) pas est va donc être créé(es)" -ForegroundColor Yellow
+        Write-Host "La ou les unitÃ©(s) organisationnelle(s) $createSubOUName n''existe(s) pas est va donc Ãªtre crÃ©Ã©(es)" -ForegroundColor Yellow
     }
     If ($isCreated -eq $false) {
         New-ADOrganizationalUnit -Name $createSubOUName -Path $FullPath -ProtectedFromAccidentalDeletion $false #Protection suppressive OU disable
-        Write-Host "La ou les unité(s) organisationnelle(s) $createSubOUName a (ont) été créé(es)" -ForegroundColor Green
+        Write-Host "La ou les unitÃ©(s) organisationnelle(s) $createSubOUName a (ont) Ã©tÃ© crÃ©Ã©(es)" -ForegroundColor Green
     }
 
     Write-Host "`n======= Fin du script ========`n" -BackgroundColor Green
@@ -228,17 +227,17 @@ function Create_OU_manual
 ######################################################################
 
 ########################################################
-# creation des comptes utilisateurs et création des OU #
+# creation des comptes utilisateurs et crÃ©ation des OU #
 ########################################################
 
 function Import_user_and_groups_from_csv {
-    # Efface tout ce qu'il y a dans la console. Ainsi que les erreurs des précédante commandes ou scripts.
+    # Efface tout ce qu'il y a dans la console. Ainsi que les erreurs des prÃ©cÃ©dante commandes ou scripts.
     Clear-Host
 
     # Module
     Import-Module ActiveDirectory
 
-    Write-Host "`n===== Script de création Utilisateurs, OU & Groupes =====`n" -BackgroundColor DarkGray
+    Write-Host "`n===== Script de crÃ©ation Utilisateurs, OU & Groupes =====`n" -BackgroundColor DarkGray
 
     # En cas d'erreur du script on continue
     $ErrorActionPreference = "Continue"
@@ -251,7 +250,7 @@ function Import_user_and_groups_from_csv {
     $Domain = (Get-ADDomain).DNSRoot
 
 
-    # Import du fichier Csv contenant la liste des utilisateurs et groupes (appel du chemin par la function Explorer qui elle même renvoit la $File)  traiter et pour chaque objet
+    # Import du fichier Csv contenant la liste des utilisateurs et groupes (appel du chemin par la function Explorer qui elle mÃªme renvoit la $File)  traiter et pour chaque objet
     $File = $File = Import-CSV -Path $Selected  -Delimiter ";" | Format-Table | ForEach-Object {
 
 
@@ -260,16 +259,16 @@ function Import_user_and_groups_from_csv {
         $lastname = $_.Surname  # Nom
         $firstname = $_.GivenName # Prenom
         $SamAccountName = $_.SamAccountName # Login
-        $DisplayName = $_.GivenName + " " + $_.Surname # Nom Affiché à l'écran de l'ordinateur
+        $DisplayName = $_.GivenName + " " + $_.Surname # Nom AffichÃ© Ã  l'Ã©cran de l'ordinateur
         $Department = $_.Department # Services auquel l'utilisateur appartient
         $RawPassword = $_.Password # Mot de passe
         $Group = $_.Group #Groupe auquel l'utilisateur appartient
-        $Description = $_.Description # Rôle ou Job de l'utilisateur
+        $Description = $_.Description # RÃ´le ou Job de l'utilisateur
         $login = $firstname.Substring(0, 1) + "." + $lastname.ToUpper()
         $OU = $_.OU #OU pour chaque utilisateurs
 
-        # Variable Complémentaires
-        $UPN = "$SamAccountName@$Domain" # permettra en cas de besoin par la suite de créer automatiquement le champ mail de l'utilisateur
+        # Variable ComplÃ©mentaires
+        $UPN = "$SamAccountName@$Domain" # permettra en cas de besoin par la suite de crÃ©er automatiquement le champ mail de l'utilisateur
 
         $Password = ConvertTo-SecureString -AsPlainText $RawPassword -Force # Gestion des mots de passe en clair
 
@@ -277,8 +276,8 @@ function Import_user_and_groups_from_csv {
         # creation des OU  si elles n'existent pas #
         ############################################
 
-        $split = $OU.Split(',') #On découpe le chemin complet de la OU (dans le CSV) avec le séparateur dans la ligne qui est une virgule
-        $chemin = $split[$split.length - 2] + ',' + $split[$split.length - 1] #Cela créer un tableau
+        $split = $OU.Split(',') #On dÃ©coupe le chemin complet de la OU (dans le CSV) avec le sÃ©parateur dans la ligne qui est une virgule
+        $chemin = $split[$split.length - 2] + ',' + $split[$split.length - 1] #Cela crÃ©er un tableau
 
 
         for ($i = $split.length - 3; $i -ge 0; $i --) {
@@ -300,19 +299,18 @@ function Import_user_and_groups_from_csv {
             Catch {
                 write-host $Path $OU
                 New-ADOrganizationalUnit -Name $Name -Path $Path -ProtectedFromAccidentalDeletion $true
-                Write-Host "Création de l''unité organisationnelle $chemin effectué avec succés"
+                Write-Host "CrÃ©ation de l''unitÃ© organisationnelle $chemin effectuÃ© avec succÃ©s"
             }
-
         }
 
         New-ADUser -GivenName $firstname -Surname $lastname -SamAccountName $login -Name $SamAccountName -DisplayName $DisplayName -UserPrincipalName $UPN -Path $OU -AccountPassword $Password -Enabled $true -PasswordNeverExpires $true -ChangePasswordAtLogon $false
 
 
-        # Vérification de la création de l'utilisateur
+        # VÃ©rification de la crÃ©ation de l'utilisateur
         if ($?) {
-            Write-Host "Utilisateur $DisplayName créé avec succès !" -BackgroundColor DarkGreen
+            Write-Host "Utilisateur $DisplayName crÃ©Ã© avec succÃ¨s !" -BackgroundColor DarkGreen
         } else {
-            Write-Host "Erreur lors de la création de l'utilisateur $DisplayName !" -BackgroundColor DarkRed
+            Write-Host "Erreur lors de la crÃ©ation de l'utilisateur $DisplayName !" -BackgroundColor DarkRed
         }
 
     }
@@ -329,26 +327,26 @@ function Import_user_and_groups_from_csv {
 ######################################################################
 
 #################################
-# Création de groupe (manuelle) #
+# CrÃ©ation de groupe (manuelle) #
 #################################
 
 function Create_group {
-    # Efface tout ce qu'il y a dans la console. Ainsi que les erreurs des précédante commandes ou scripts.
+    # Efface tout ce qu'il y a dans la console. Ainsi que les erreurs des prÃ©cÃ©dante commandes ou scripts.
     Clear-Host
 
     # Module
     Import-Module ActiveDirectory
 
-    Write-Host "`n===== Création de groupe (manuel) =====`n" -BackgroundColor DarkGray
+    Write-Host "`n===== CrÃ©ation de groupe (manuel) =====`n" -BackgroundColor DarkGray
 
 
     # Variable
     $Name_Group = Read-Host -Prompt 'Renseigner le nom du nouveau groupe : '
-    $Group_Scope = Read-Host -Prompt 'Définisser le type (du groupe) ==> Domain local / Global / Universal (par defaut un groupe est Global) : '
-    $Display_Name = Read-Host -Prompt 'Renseigner le nom qui sera affiché : '
+    $Group_Scope = Read-Host -Prompt 'DÃ©finisser le type (du groupe) ==> Domain local / Global / Universal (par defaut un groupe est Global) : '
+    $Display_Name = Read-Host -Prompt 'Renseigner le nom qui sera affichÃ© : '
     $Description = Read-Host -Prompt 'Renseigner une description du groupe : ' $Name_Group
 
-    $ou = Read-Host 'Entrer le chemin de l''unité organisationnelle ou sera placé le nouveau groupe avec la syntaxe suivante ===> ou=Utilisateur : '  # syntaxe ou=Utilisateur / ou=chef
+    $ou = Read-Host 'Entrer le chemin de l''unitÃ© organisationnelle ou sera placÃ© le nouveau groupe avec la syntaxe suivante ===> ou=Utilisateur : '  # syntaxe ou=Utilisateur / ou=chef
     $DC = Read-Host 'Entrer le nom de domaine avec la syntaxe suivante ===> DC=exemple,DC=com : ' # syntaxe dc=eris,dc=local pour eris.local 
 
 
@@ -363,15 +361,15 @@ function Create_group {
         Get-ADGROUP ($Name_Group + ',' + $OU + ',' + $DC)
         $isCreated = $true
     } Catch {
-        Write-host $Name_Group ' N''existe pas et va donc être créé' -BackgroundColor Green
+        Write-host $Name_Group ' N''existe pas et va donc Ãªtre crÃ©Ã©' -BackgroundColor Green
         $isCreated = $false
     }
     If ($isCreated -eq $true) {
-        Write-Host 'Le groupe '$Name_Group ' exite déjà' -BackgroundColor Red
+        Write-Host 'Le groupe '$Name_Group ' exite dÃ©jÃ ' -BackgroundColor Red
     } else {
         # -GroupCategory Distribution est pour les serveurs de mail
         New-ADGroup -Name $Name_Group -SamAccountName $Name_Group -GroupCategory Security -GroupScope $Group_Scope -DisplayName $Display_Name -Path ($ou + ',' + $DC) -Description $Description
-        Write-Host 'Le nouveau groupe' $Name_Group 'a été créé' -BackgroundColor Green
+        Write-Host 'Le nouveau groupe' $Name_Group 'a Ã©tÃ© crÃ©Ã©' -BackgroundColor Green
     }
 
     # Pour un compte de messagerie
@@ -416,17 +414,17 @@ while ($true) {
     Write-Host " "
     Write-Host " "
     Write-Host " "
-    Write-Host " Le prénom de l''utilisateur du compte utilisateur est contenue dans la colonne GivenName"
+    Write-Host " Le prÃ©nom de l''utilisateur du compte utilisateur est contenue dans la colonne GivenName"
     Write-Host " "
     Write-Host " "
     Write-Host " "
     Write-Host "Presser '1' Pour installer un Active Directory." -ForegroundColor Cyan
     Write-Host " "
-    Write-Host "Presser '2' Pour créer de(s) Unité(s) Organisationnelle(s) et arborescence [EN MANUEL]" -ForegroundColor Cyan
+    Write-Host "Presser '2' Pour crÃ©er de(s) UnitÃ©(s) Organisationnelle(s) et arborescence [EN MANUEL]" -ForegroundColor Cyan
     Write-Host " "
-    Write-Host "Presser '3' Pour importer un (des) utilisateur(s) et un (des) groupe(s) à partir d''un fichier CSV" -ForegroundColor Cyan
+    Write-Host "Presser '3' Pour importer un (des) utilisateur(s) et un (des) groupe(s) Ã  partir d''un fichier CSV" -ForegroundColor Cyan
     Write-Host " "
-    Write-Host "Presser '4' Pour créer un groupe [EN MANUEL]" -ForegroundColor Cyan
+    Write-Host "Presser '4' Pour crÃ©er un groupe [EN MANUEL]" -ForegroundColor Cyan
     Write-Host " "
     Write-Host "Presser '5' to quit." -ForegroundColor Cyan
     Write-Host " "
