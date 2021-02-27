@@ -10,40 +10,19 @@ All Code provided as is and used at your own risk.
 
 ####################################################################### FONCTIONS ANNEXE ######################################################################
 
+
 ####################################
 # Fonction explorateur de fichiers #
 ####################################
 
 function Explorer {
-    param(
-        [Parameter(ValueFromPipeline = $true, HelpMessage = "Enter le chemin du fichier CSV)")]
-        [String[]]$Path = $null
-    )
-
-    if ($Selected -eq $null) {
-
-        Add-Type -AssemblyName System.Windows.Forms
-
-        $Dialog = New-Object System.Windows.Forms.OpenFileDialog
-        $Dialog.InitialDirectory = "$InitialDirectory"
-        $Dialog.Title = "Selectionner le fichier CSV"
-        $Dialog.Filter = "CSV File(s)|*.csv"
-        $Dialog.Multiselect = $false
-        $Result = $Dialog.ShowDialog()
-
-        if ($Result -eq 'OK') {
-            Try {
-                $Selected = $Dialog.FileNames
-            } Catch {
-                $Path = $null
-                Break
-            }
-        } else {
-            # Shows upon cancellation of Save Menu
-            Write-Host -ForegroundColor Yellow "Notice: Aucun fichier sélectionné"
-            Break
+Add-Type -AssemblyName System.Windows.Forms
+    # Open Browser Explorer
+        $FileBrowser = New-Object System.Windows.Forms.OpenFileDialog -Property @{ InitialDirectory = [Environment]::GetFolderPath('Desktop') }
+        $FileBrowser = New-Object System.Windows.Forms.OpenFileDialog -Property @{ 
+            InitialDirectory = [Environment]::GetFolderPath('Desktop') 
+            Filter = 'Documents (*.csv)|*.csv'
         }
-    }
 }
 
 ###################################################################### FONCTIONS ######################################################################
@@ -54,42 +33,57 @@ function Explorer {
 
 
 function Install_AD {
-
-    Write-Host "`n===== Installation d'un active directory =====`n" -BackgroundColor DarkGray
-
-
-    # Demande du Nom de Server à l'Administrateur pour le renommage de la machine
-    $SRV_name = Read-Host "Renseigner le nom du server"
-
     # Remplace le nom générique du serveur par le nom choisi et redémarrage du serveur
     workflow Resume_Workflow
     {
-
         Rename-Computer -NewName $SRV_name -Force -Passthru
         Restart-Computer -Wait
-        # Do some stuff
     }
+
+
+
+    [string] $SRV_name = Read-Host "Renseigner le nom du server "
+    [string] $IPv4 = Read-Host "Renseigner l'adresse IPv4 du serveur "
+    [string] $Mask = Read-Host "Renseigner le masque de sous réseau exemple seulement 24 for /24 "
+    [string] $Gateway = Read-Host "Renseigner la passerelle "
+    [string] $IP_dns = Read-Host "Renseigner le DNS (normalement si c'est un AD c'est lui même) "
+    [string] $name_domain = Read-Host "Renseigner le nom de domaine "
+
+    Write-Host "Interfaces infos :"
+    Get-NetAdapter
+
+    [string] $ipif_index = Read-Host "Renseigner l'index de l'interface "
+
+    
+
+    $Carte = Read-Host "Renseigner le nom de l'interface ou vous souhaitez désactiver IPv6 "
+    Try {
+        Remove-NetIPAddress -InterfaceIndex $ipif_index
+        Disable-NetAdapterBinding -Name "$Carte"  -ComponentID ms_tcpip6
+    }
+    Catch {
+        Write-host "La carte " $Carte " n'est pas présente ou est déjà désactivée"
+    }
+    
+    
+
+
+    Write-Host "`n===== Installation d'un active directory =====`n" -BackgroundColor DarkGray
 
     # Tâches effectués après le redémarrage du server:
     # - Adressage IP / Nom de la nouvelle Forêt / installation du DNS et paramétrage de son IP.
 
-    Param(
-    [Parameter(Mandatory = $false, ValueFromPipeline = $true)][string[]]$IPv4 = Read-Host "Renseigner l'adresse IPv4 du serveur : ",
-    [Parameter(Mandatory = $false, ValueFromPipeline = $true)][string[]]$Mask = Read-Host "Renseigner le masque de sous réseau exemple seulement 24 for /24 : ",
-    [Parameter(Mandatory =$false, ValueFromPipeline = $true)][string[]]$Gateway = Read-Host "Renseigner la passerelle : ", # gateway
-    [Parameter(Mandatory = $false, ValueFromPipeline = $true)][string[]]$IP_dns = Read-Host "Renseigner le DNS (normalement si c'est un AD c'est lui même) : ", # dns @ip
-    [Parameter(Mandatory = $false, ValueFromPipeline= $true)][string[]]$name_domain = Read-Host "Renseigner le nom de domaine voulu exemple.com" # name of DC
-    )
 
-    $ipif = (Get-NetAdapter).ifIndex
     # Permet d'attribuer l'IP / Masque / Gateway au server
-    New-NetIPAddress -InterfaceIndex $ipif -IPAddress $IPv4 -PrefixLength $Mask DefaultGateway $Gateway
+    Try {
+        New-NetIPAddress -InterfaceIndex $ipif_index -IPAddress $IPv4 -PrefixLength $Mask -DefaultGateway $Gateway
+    }
+    Catch {
+        Write-host "L'adresse IP est déjà attribuée à l'interface"
+    }
 
     # Permet d'attribuer un DNS au server
-    Set-DnsClientServerAddress -InterfaceIndex 4 -ServerAddresses ("$IP_dns")
-
-    # Permet de voir l'adressage
-    Get-NetIPAddress
+    Set-DnsClientServerAddress -InterfaceIndex $ipif_index -ServerAddresses ("$IP_dns")
 
     # Installe les service necessaire à la création d'un Active directory
     Install-WindowsFeature –Name AD-Domain-Services –IncludeManagementTools
@@ -98,27 +92,23 @@ function Install_AD {
     # https://docs.microsoft.com/en-us/powershell/module/addsdeployment/install-addsforest?view=win10-ps
 
     Install-ADDSForest
-    -DomainName "$name_domain" # Le nom du domain
     -CreateDnsDelegation:$false
     -DatabasePath "C:\Windows\NTDS"
     -DomainMode "7" # la valeur est pour les AD a partir de windows server 2016
-    -DomainNetbiosName "example"
+    -DomainName "$name_domain" # Le nom du domain
+    #-DomainNetbiosName "example"
     -ForestMode "7" # la valeur est pour les AD a partir de windows server 2016
     -InstallDns:$true
     -LogPath "C:\Windows\NTDS"
-    -NoRebootOnCompletion:$True
+    -NoRebootOnCompletion:$false
     -SysvolPath "C:\Windows\SYSVOL"
     -Force:$true
-
-    # Paramétrage du DnsClientServerAddress
 
     # Check du DNS dans sa config initiale
     Get-DnsServerZone
 
     # Ajout de la zone de recherche inversé
-    $IPreverse = Read-Host "Entrée l'adresse du réseau"
-    Add-DnsServerPrimaryZone -Network ("$IPreverse") -ReplicationScope "Domain"
-
+    Add-DnsServerPrimaryZone -Network ("127.0.0.1") -ReplicationScope "Domain"
     # Check des modifications du Dns
     Get-DnsServerZone
 
@@ -126,6 +116,7 @@ function Install_AD {
     $error
 
     Write-Host "`n======= Fin du script ========`n" -BackgroundColor Green
+    Write-Host "`n======= Veuillez rédemarrer le serveur ========`n" -BackgroundColor Red
     break
 
 }
@@ -136,14 +127,12 @@ function Install_AD {
 # Installation DHCP #
 #####################
 
-Write-Host " Installation du Role DHCP et prés paramétrage "
-[string]$Address = Read-Host -Prompt "Renseigner l'adresse IP du serveur : "
-Install-WindowsFeature -Name DHCP -IncludeManagementTools
-Add-DhcpServerInDC -DnsName 127.0.0.1 -IPAddress $Address
-
-
-
-
+function Install_DHCP {
+    Write-Host " Installation du Role DHCP et prés paramétrage "
+    [string]$Address = Read-Host -Prompt "Renseigner l'adresse IP du serveur : "
+    Install-WindowsFeature -Name DHCP -IncludeManagementTools
+    Add-DhcpServerInDC -DnsName 127.0.0.1 -IPAddress $Address
+}
 
 ############################
 # Check et Creation des OU #
@@ -251,7 +240,7 @@ function Import_user_and_groups_from_csv {
 
 
     # Import du fichier Csv contenant la liste des utilisateurs et groupes (appel du chemin par la function Explorer qui elle même renvoit la $File)  traiter et pour chaque objet
-    $File = $File = Import-CSV -Path $Selected  -Delimiter ";" | Format-Table | ForEach-Object {
+    $File = Import-CSV $FileBrowser  -Delimiter ";" | Format-Table | ForEach-Object {
 
 
         # Variables fixes
@@ -426,7 +415,9 @@ while ($true) {
     Write-Host " "
     Write-Host "Presser '4' Pour créer un groupe [EN MANUEL]" -ForegroundColor Cyan
     Write-Host " "
-    Write-Host "Presser '5' to quit." -ForegroundColor Cyan
+    Write-Host "Presser '5' Pour installer un serveur DHCP [EN MANUEL]" -ForegroundColor Cyan
+    Write-Host " "
+    Write-Host "Presser '6' to quit." -ForegroundColor Cyan
     Write-Host " "
     Write-Host " "
 
@@ -450,6 +441,9 @@ while ($true) {
             Create_group
         }
         '5' {
+            Install_DHCP
+        }
+        '6' {
             return
         }
         default {
