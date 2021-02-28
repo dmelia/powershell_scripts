@@ -49,14 +49,16 @@ function Install_AD {
     [string] $name_domain
 
     if ($Load_Configuration -eq "y" -or $Load_Configuration -eq "Y") {
-        $FileContent = Get-Content -Path ".\AD_CONF.json" | ConvertFrom-Json
-        $SRV_name = $FileContent.SRV_name
-        $IPv4 = $FileContent.IPv4
-        $Mask = $FileContent.Mask
-        $Gateway = $FileContent.Gateway
-        $IP_dns = $FileContent.IP_dns
-        $name_domain = $FileContent.name_domain
-        $ipif_index = $FileContent.ipif_index
+        $Configuration = Get-Content -Path ".\AD_CONF.json" | ConvertFrom-Json
+        $SRV_name = $Configuration.SRV_name
+        $IPv4 = $Configuration.IPv4
+        $Mask = $Configuration.Mask
+        $Gateway = $Configuration.Gateway
+        $IP_dns = $Configuration.IP_dns
+        $name_domain = $Configuration.name_domain
+        $ipif_index = $Configuration.ipif_index
+
+        Write-Host $SRV_name
     } else {
         $SRV_name = Read-Host "Renseigner le nom du server "
         $IPv4 = Read-Host "Renseigner l'adresse IPv4 du serveur "
@@ -101,23 +103,22 @@ function Install_AD {
     Set-DnsClientServerAddress -InterfaceIndex $ipif_index -ServerAddresses ("$IP_dns")
 
     # Installe les service necessaire à  la création d'un Active directory
-    Install-WindowsFeature -Name AD-Domain-Services -IncludeManagementTools
+    Install-WindowsFeature -Name "AD-Domain-Services" -IncludeManagementTools
 
     # Paramètrage des différentes informations de l'Active directory
     # https://docs.microsoft.com/en-us/powershell/module/addsdeployment/install-addsforest?view=win10-ps
 
-    Install-ADDSForest
-    -CreateDnsDelegation:$false
-    -DatabasePath "C:\Windows\NTDS"
-    -DomainMode "7" # la valeur est pour les AD a partir de windows server 2016
-    -DomainName "$name_domain" # Le nom du domain
-    #-DomainNetbiosName "example"
-    -ForestMode "7" # la valeur est pour les AD a partir de windows server 2016
-    -InstallDns:$true
-    -LogPath "C:\Windows\NTDS"
-    -NoRebootOnCompletion:$false
-    -SysvolPath "C:\Windows\SYSVOL"
-    -Force:$true
+    Install-ADDSForest `
+            -DomainName $name_domain `
+            -CreateDnsDelegation:$false `
+            -DatabasePath "C:\Windows\NTDS" `
+            -DomainMode "7" `
+            -ForestMode "7" `
+            -InstallDns:$true `
+            -LogPath "C:\Windows\NTDS" `
+            -NoRebootOnCompletion:$false `
+            -SysvolPath "C:\Windows\SYSVOL" `
+            -Force:$true
 
     # Check du DNS dans sa config initiale
     Get-DnsServerZone
@@ -179,7 +180,7 @@ function Create_OU_manual
     Try {
         Get-ADOrganizationalUnit -Identity ('OU=' + $createOUName + ',' + $Path_DC)
         $isCreated = $true
-        Write-host "L''unité organisationnelle $createOUName existe déjà " -ForegroundColor Red
+        Write-host "L''unité organisationnelle " $createOUName " existe déjà " -ForegroundColor Red
     }
     Catch {
         $isCreated = $false
@@ -215,7 +216,7 @@ function Create_OU_manual
         Write-Host "La ou les unité(s) organisationnelle(s) $createSubOUName existe(s) déjà " -ForegroundColor Red
     }  Catch {
         $isCreated = $false
-        Write-Host "La ou les unité(s) organisationnelle(s) $createSubOUName n''existe(s) pas est va donc être créé(es)" -ForegroundColor Yellow
+        Write-Host "La ou les unité(s) organisationnelle(s) $createSubOUName n'existe(nt) pas est va/vont donc être créé(es)" -ForegroundColor Yellow
     }
     If ($isCreated -eq $false) {
         New-ADOrganizationalUnit -Name $createSubOUName -Path $FullPath -ProtectedFromAccidentalDeletion $false #Protection suppressive OU disable
@@ -295,7 +296,6 @@ function Import_user_and_groups_from_csv {
                 Get-ADOrganizationalUnit -Identity $chemin
                 $isCreated = $true
                 Write-Host 'La $chemin existe'
-
             }
 
 
@@ -312,7 +312,7 @@ function Import_user_and_groups_from_csv {
 
         # Vérification de la création de l'utilisateur
         if ($?) {
-            Write-Host "Utilisateur $DisplayName créé avec succà¨s !" -BackgroundColor DarkGreen
+            Write-Host "Utilisateur $DisplayName créé avec succs !" -BackgroundColor DarkGreen
         } else {
             Write-Host "Erreur lors de la création de l'utilisateur $DisplayName !" -BackgroundColor DarkRed
         }
