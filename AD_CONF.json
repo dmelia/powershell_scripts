@@ -1,10 +1,10 @@
 {
-  "Carte": "Ethernet0",
-  "ipif_index": "",
-  "IPv4": "",
+  "Carte": "Ethernet",
+  "ipif_index": "6",
+  "IPv4": "10.0.2.15",
   "Mask": "255.255.255.0",
-  "Gateway": "",
-  "IP_dns": "",
+  "Gateway": "10.0.2.1",
+  "IP_dns": "127.0.0.1",
   "SRV_name": "SRV_AD",
   "name_domain": "test.local"
 }
