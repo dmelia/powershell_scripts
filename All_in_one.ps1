@@ -43,7 +43,14 @@ function Install_AD {
     [string] $Load_Configuration = Read-Host "Charger la configuration ? Y/N "
 
     if ($Load_Configuration -eq "y" -or $Load_Configuration -eq "Y") {
-        Get-Content ".\AD_CONF.txt"
+        $FileContent = Get-Content -Path ".\AD_CONF.json" | ConvertFrom-Json
+        $SRV_name = $FileContent["SRV_name"]
+        $IPv4 = $FileContent["IPv4"]
+        $Mask = $FileContent["Mask"]
+        $Gateway = $FileContent["Gateway"]
+        $IP_dns = $FileContent["IP_dns"]
+        $name_domain = $FileContent["name_domain"]
+        $ipif_index = $FileContent["ipif_index"]
     } else {
         [string] $SRV_name = Read-Host "Renseigner le nom du server "
         [string] $IPv4 = Read-Host "Renseigner l'adresse IPv4 du serveur "
