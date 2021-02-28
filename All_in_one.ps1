@@ -40,23 +40,25 @@ function Install_AD {
         Restart-Computer -Wait
     }
 
+    [string] $Load_Configuration = Read-Host "Charger la configuration ? Y/N "
 
+    if ($Load_Configuration -eq "y" -or $Load_Configuration -eq "Y") {
+        Get-Content ".\AD_CONF.txt"
+    } else {
+        [string] $SRV_name = Read-Host "Renseigner le nom du server "
+        [string] $IPv4 = Read-Host "Renseigner l'adresse IPv4 du serveur "
+        [string] $Mask = Read-Host "Renseigner le masque de sous réseau exemple seulement 24 for /24 "
+        [string] $Gateway = Read-Host "Renseigner la passerelle "
+        [string] $IP_dns = Read-Host "Renseigner le DNS (normalement si c'est un AD c'est lui même) "
+        [string] $name_domain = Read-Host "Renseigner le nom de domaine "
 
-    [string] $SRV_name = Read-Host "Renseigner le nom du server "
-    [string] $IPv4 = Read-Host "Renseigner l'adresse IPv4 du serveur "
-    [string] $Mask = Read-Host "Renseigner le masque de sous réseau exemple seulement 24 for /24 "
-    [string] $Gateway = Read-Host "Renseigner la passerelle "
-    [string] $IP_dns = Read-Host "Renseigner le DNS (normalement si c'est un AD c'est lui même) "
-    [string] $name_domain = Read-Host "Renseigner le nom de domaine "
+        Write-Host "Interfaces infos :"
+        Get-NetAdapter
 
-    Write-Host "Interfaces infos :"
-    Get-NetAdapter
-
-    [string] $ipif_index = Read-Host "Renseigner l'index de l'interface "
-
+        [string] $ipif_index = Read-Host "Renseigner l'index de l'interface "
+        $Carte = Read-Host "Renseigner le nom de l'interface ou vous souhaitez désactiver IPv6 "
+    }
     
-
-    $Carte = Read-Host "Renseigner le nom de l'interface ou vous souhaitez désactiver IPv6 "
     Try {
         Remove-NetIPAddress -InterfaceIndex $ipif_index
         Disable-NetAdapterBinding -Name "$Carte"  -ComponentID ms_tcpip6

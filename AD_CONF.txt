@@ -1,0 +1,29 @@
+#################################################
+# Paramétres prédéfinis de l'Active Directory   #
+#################################################
+
+# Nom de la Carte ou Switch qui sera utilisé
+# utiliser la commande Get-NetAdpter 
+$Carte = "Ethernet0"
+
+# Index correspondant à la carte ou au Switch
+# utiliser la commande Get-NetAdpter 
+$ipif_index = ""
+
+# Adresse IP
+$IPv4 = ""
+
+# Masque de sous réseau
+$Mask = "255.255.255.0"
+
+# adresse IP de la passerelle
+$Gateway = ""
+
+# Le DNS qui sera utilisé (dans le cas d'un AD utiliser l'adresse de loopback)
+$IP_dns = ""
+
+# Nom du controleur de domaine
+$SRV_name = "SRV-AD"
+
+# Nom de domaine
+$name_domain = "david.local"
